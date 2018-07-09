@@ -39,7 +39,10 @@ class CraftLab(object):
 
     def observations(self):
         """Return observation dict."""
-        return {'features': self._current_state.features()}
+        return {
+            'features': self._current_state.features(),
+            'task_name': self.task_name
+        }
 
     def step(self, action, num_steps=1):
         """Step the environment, getting reward, done and observation."""
@@ -65,7 +68,7 @@ class CraftLab(object):
         return int(self._isDone())
 
     def obs_specs(self):
-        return {'features': (self.world.n_features, )}
+        return {'features': (self.world.n_features, ), 'task_name': (,)}
 
     def action_specs(self):
         # last action is termination of current option, we don't use it.
@@ -101,8 +104,7 @@ class CraftLab(object):
             win.clear()
             for y in range(height):
                 for x in range(width):
-                    if not (state.grid[x, y, :].any() or
-                            (x, y) == state.pos):
+                    if not (state.grid[x, y, :].any() or (x, y) == state.pos):
                         continue
                     thing = state.grid[x, y, :].argmax()
                     if (x, y) == state.pos:
@@ -131,6 +133,6 @@ class CraftLab(object):
                     win.addch(height - y, x * 2, ch1, color)
                     win.addch(height - y, x * 2 + 1, ch2, color)
             win.refresh()
-            time.sleep(1/fps)
+            time.sleep(1 / fps)
 
         return _visualize

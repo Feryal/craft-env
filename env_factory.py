@@ -51,11 +51,12 @@ class EnvironmentFactory(object):
             self.tasks[hint_key] = task
             self.task_index.index(task)
 
-    def sample_environment(self):
-        return self.sample_environment_by_name(
-            np.random.choice(self.tasks.keys()))
+        self.task_names = self.tasks.keys()
 
-    def sample_environment_by_name(self, task_name):
+    def sample_environment(self, task_name=None):
+        if task_name is None:
+            task_name = np.random.choice(self.task_names)
+
         # Get the task
         task = self.tasks[task_name]
         goal_arg = task.goal[1]
