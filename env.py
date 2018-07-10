@@ -54,7 +54,7 @@ class CraftLab(object):
         state_reward, self._current_state = self._current_state.step(action)
 
         done = self._isDone()
-        reward = self._getReward() + state_reward
+        reward = np.float32(self._getReward() + state_reward)
 
         if done:
             self.reset()

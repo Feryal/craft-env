@@ -234,7 +234,7 @@ class CraftState(object):
             assert len(features) == self.world.n_features
             self._cached_features = features
 
-        return self._cached_features
+        return self._cached_features.astype(np.float32)
 
     def step(self, action):
         x, y = self.pos
