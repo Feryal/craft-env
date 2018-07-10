@@ -6,6 +6,7 @@ from __future__ import print_function
 
 import collections
 import curses
+import numpy as np
 import time
 
 Task = collections.namedtuple("Task", ["goal", "steps"])
@@ -40,7 +41,7 @@ class CraftLab(object):
     def observations(self):
         """Return observation dict."""
         return {
-            'features': self._current_state.features(),
+            'features': self._current_state.features().astype(np.float32),
             'task_name': self.task_name
         }
 
@@ -65,10 +66,10 @@ class CraftLab(object):
         return self._current_state.satisfies(goal_name, goal_arg)
 
     def _getReward(self):
-        return int(self._isDone())
+        return np.float32(self._isDone())
 
     def obs_specs(self):
-        return {'features': (self.world.n_features, ), 'task_name': (,)}
+        return {'features': (self.world.n_features, ), 'task_name': tuple()}
 
     def action_specs(self):
         # last action is termination of current option, we don't use it.

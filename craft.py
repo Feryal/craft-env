@@ -242,7 +242,7 @@ class CraftState(object):
         n_inventory = self.inventory
         n_grid = self.grid
 
-        reward = 0
+        reward = 0.
 
         # move actions
         if action == DOWN:

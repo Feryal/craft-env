@@ -8,9 +8,9 @@ import collections
 import numpy as np
 import yaml
 
-import craft
-import env
-from misc import util
+from jeju_env import craft
+from jeju_env import env
+from jeju_env.misc import util
 
 Task = collections.namedtuple("Task", ["goal", "steps"])
 
