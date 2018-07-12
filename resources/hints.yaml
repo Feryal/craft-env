@@ -30,3 +30,9 @@
 
 "get[wood]":
   ["get_wood"]
+
+"get[grass]":
+  ["get_grass"]
+
+"get[iron]":
+  ["get_iron"]
