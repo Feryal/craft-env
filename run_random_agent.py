@@ -32,8 +32,8 @@ def run_loop(env, n_steps, render=False):
 
 
 def main():
-  recipes_path = "resources/recipes.yaml"
-  hints_path = "resources/hints.yaml"
+  recipes_path = "craft_env/resources/recipes.yaml"
+  hints_path = "craft_env/resources/hints.yaml"
   envSampler = env_factory.EnvironmentFactory(
     recipes_path, hints_path, seed=1)
 

@@ -72,7 +72,9 @@ class CraftLab(object):
     return done
 
   def _get_reward(self):
-    return np.float32(self._is_done())
+    goal_name, goal_arg = self.task.goal
+    reward = self._current_state.satisfies(goal_name, goal_arg)
+    return reward
 
   def obs_specs(self):
     return {'features': (self.world.n_features, ), 'task_name': tuple()}
