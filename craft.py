@@ -61,11 +61,11 @@ class CraftWorld(object):
 
     self.non_grabbable_indices = self.cookbook.environment
     self.grabbable_indices = [
-      i for i in range(self.cookbook.n_kinds)
-      if i not in self.non_grabbable_indices
+        i for i in range(self.cookbook.n_kinds)
+        if i not in self.non_grabbable_indices
     ]
     self.workshop_indices = [
-      self.cookbook.index["workshop%d" % i] for i in range(N_WORKSHOPS)
+        self.cookbook.index["workshop%d" % i] for i in range(N_WORKSHOPS)
     ]
     self.water_index = self.cookbook.index["water"]
     self.stone_index = self.cookbook.index["stone"]
@@ -78,9 +78,9 @@ class CraftWorld(object):
       make_island = goal == self.cookbook.index["gold"]
       make_cave = goal == self.cookbook.index["gem"]
       return self.sample_scenario(
-        {
-          goal: 1
-        }, make_island=make_island, make_cave=make_cave)
+          {
+              goal: 1
+          }, make_island=make_island, make_cave=make_cave)
     elif goal in self.cookbook.recipes:
       ingredients = self.cookbook.primitives_for(goal)
       return self.sample_scenario(ingredients)
@@ -112,7 +112,7 @@ class CraftWorld(object):
     # ingredients
     for primitive in self.cookbook.primitives:
       if primitive == self.cookbook.index["gold"] or \
-          primitive == self.cookbook.index["gem"]:
+              primitive == self.cookbook.index["gem"]:
         continue
       for i in range(4):
         (x, y) = random_free(grid, self.random)
@@ -141,7 +141,7 @@ class CraftWorld(object):
         for y in range(HEIGHT):
           for x in range(WIDTH):
             if not (state.grid[x, y, :].any() or
-                (x, y) == state.pos):
+                    (x, y) == state.pos):
               continue
             thing = state.grid[x, y, :].argmax()
             if (x, y) == state.pos:
@@ -185,7 +185,7 @@ class CraftScenario(object):
   def init(self):
     inventory = np.zeros(self.world.cookbook.n_kinds)
     state = CraftState(self, self.init_grid, self.init_pos, self.init_dir,
-               inventory)
+                       inventory)
     return state
 
 
@@ -211,11 +211,11 @@ class CraftState(object):
       bhh = int((WINDOW_HEIGHT * WINDOW_HEIGHT) / 2)
 
       grid_feats = array.pad_slice(self.grid, (x - hw, x + hw + 1),
-                     (y - hh, y + hh + 1))
+                                   (y - hh, y + hh + 1))
       grid_feats_big = array.pad_slice(self.grid, (x - bhw, x + bhw + 1),
-                       (y - bhh, y + bhh + 1))
+                                       (y - bhh, y + bhh + 1))
       grid_feats_big_red = block_reduce(
-        grid_feats_big, (WINDOW_WIDTH, WINDOW_HEIGHT, 1), func=np.max)
+          grid_feats_big, (WINDOW_WIDTH, WINDOW_HEIGHT, 1), func=np.max)
       #grid_feats_big_red = np.zeros((WINDOW_WIDTH, WINDOW_HEIGHT, self.world.cookbook.n_kinds))
 
       self.gf = grid_feats.transpose((2, 0, 1))
@@ -229,8 +229,8 @@ class CraftState(object):
       dir_features[self.dir] = 1
 
       features = np.concatenate((grid_feats.ravel(),
-                     grid_feats_big_red.ravel(),
-                     self.inventory, dir_features, [0]))
+                                 grid_feats_big_red.ravel(),
+                                 self.inventory, dir_features, [0]))
       assert len(features) == self.world.n_features
       self._cached_features = features
 
@@ -277,10 +277,10 @@ class CraftState(object):
         assert here.sum() == 1
         thing = here.argmax()
 
-        if not(thing in self.world.grabbable_indices or \
-            thing in self.world.workshop_indices or \
-            thing == self.world.water_index or \
-            thing == self.world.stone_index):
+        if not(thing in self.world.grabbable_indices or
+               thing in self.world.workshop_indices or
+               thing == self.world.water_index or
+               thing == self.world.stone_index):
           continue
 
         n_inventory = self.inventory.copy()
@@ -327,7 +327,7 @@ class CraftState(object):
       n_x, n_y = x, y
 
     new_state = CraftState(self.scenario, n_grid, (n_x, n_y), n_dir,
-                 n_inventory)
+                           n_inventory)
     return reward, new_state
 
   def next_to(self, i_kind):

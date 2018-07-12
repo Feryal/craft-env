@@ -15,7 +15,7 @@ Task = collections.namedtuple("Task", ["goal", "steps"])
 class CraftLab(object):
   """DMLab-like wrapper for a Craft state."""
 
-  def __init__(self, scenario, task_name, task):
+  def __init__(self, scenario, task_name, task, max_steps=100):
     """DMLab-like interface for a Craft environment.
 
     Given a `scenario` (basically holding an initial world state), will provide
@@ -26,7 +26,9 @@ class CraftLab(object):
     self.scenario = scenario
     self.task_name = task_name
     self.task = task
+    self.max_steps = max_steps
 
+    self.steps = 0
     self._current_state = self.scenario.init()
 
   def reset(self, seed=0):
@@ -36,13 +38,14 @@ class CraftLab(object):
     """
     del seed
     self._current_state = self.scenario.init()
+    self.steps = 0
     return self.observations()
 
   def observations(self):
     """Return observation dict."""
     return {
-      'features': self._current_state.features().astype(np.float32),
-      'task_name': self.task_name
+        'features': self._current_state.features().astype(np.float32),
+        'task_name': self.task_name
     }
 
   def step(self, action, num_steps=1):
@@ -52,21 +55,24 @@ class CraftLab(object):
     # Step environment
     # (state_reward is 0 for all existing Craft environments)
     state_reward, self._current_state = self._current_state.step(action)
+    self.steps += 1
 
-    done = self._isDone()
-    reward = np.float32(self._getReward() + state_reward)
+    done = self._is_done()
+    reward = np.float32(self._get_reward() + state_reward)
 
     if done:
       self.reset()
     observations = self.observations()
     return reward, done, observations
 
-  def _isDone(self):
+  def _is_done(self):
     goal_name, goal_arg = self.task.goal
-    return self._current_state.satisfies(goal_name, goal_arg)
+    done = (self._current_state.satisfies(goal_name, goal_arg)
+            or self.steps >= self.max_steps)
+    return done
 
-  def _getReward(self):
-    return np.float32(self._isDone())
+  def _get_reward(self):
+    return np.float32(self._is_done())
 
   def obs_specs(self):
     return {'features': (self.world.n_features, ), 'task_name': tuple()}
@@ -74,12 +80,12 @@ class CraftLab(object):
   def action_specs(self):
     # last action is termination of current option, we don't use it.
     return {
-      'DOWN': 0,
-      'UP': 1,
-      'LEFT': 2,
-      'RIGHT': 3,
-      'USE': 4,
-      # 'TERMINATE': 5
+        'DOWN': 0,
+        'UP': 1,
+        'LEFT': 2,
+        'RIGHT': 3,
+        'USE': 4,
+        # 'TERMINATE': 5
     }
 
   def close(self):

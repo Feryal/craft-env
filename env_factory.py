@@ -18,9 +18,10 @@ Task = collections.namedtuple("Task", ["goal", "steps"])
 class EnvironmentFactory(object):
   """Factory instantiating Craft environments."""
 
-  def __init__(self, recipes_path, hints_path, seed=0):
+  def __init__(self, recipes_path, hints_path, max_steps=100, seed=0):
     self.subtask_index = util.Index()
     self.task_index = util.Index()
+    self._max_steps = max_steps
 
     # create World
     self.world = craft.CraftWorld(recipes_path, seed)
@@ -42,7 +43,7 @@ class EnvironmentFactory(object):
       goal = util.parse_fexp(hint_key)
       # goal: (make, plank)
       goal = (self.subtask_index.index(goal[0]),
-          self.world.cookbook.index[goal[1]])
+              self.world.cookbook.index[goal[1]])
       steps = tuple(self.subtask_index.index(s) for s in hint)
       task = Task(goal, steps)
       for subtask in steps:
@@ -65,6 +66,6 @@ class EnvironmentFactory(object):
     scenario = self.world.sample_scenario_with_goal(goal_arg)
 
     # Wrap it into an environment
-    environment = env.CraftLab(scenario, task_name, task)
+    environment = env.CraftLab(scenario, task_name, task, max_steps=self._max_steps)
 
     return environment
