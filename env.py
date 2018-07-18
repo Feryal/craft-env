@@ -15,7 +15,7 @@ Task = collections.namedtuple("Task", ["goal", "steps"])
 class CraftLab(object):
   """DMLab-like wrapper for a Craft state."""
 
-  def __init__(self, scenario, task_name, task, max_steps=100):
+  def __init__(self, scenario, task_name, task, max_steps=100, visualise=False):
     """DMLab-like interface for a Craft environment.
 
     Given a `scenario` (basically holding an initial world state), will provide
@@ -27,7 +27,7 @@ class CraftLab(object):
     self.task_name = task_name
     self.task = task
     self.max_steps = max_steps
-
+    self._visualise = visualise
     self.steps = 0
     self._current_state = self.scenario.init()
 
@@ -59,6 +59,9 @@ class CraftLab(object):
 
     done = self._is_done()
     reward = np.float32(self._get_reward() + state_reward)
+
+    if self._visualise:
+      curses.wrapper(self.render(fps=15))
 
     if done:
       self.reset()

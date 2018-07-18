@@ -18,11 +18,11 @@ Task = collections.namedtuple("Task", ["goal", "steps"])
 class EnvironmentFactory(object):
   """Factory instantiating Craft environments."""
 
-  def __init__(self, recipes_path, hints_path, max_steps=100, seed=0):
+  def __init__(self, recipes_path, hints_path, max_steps=100, seed=0, visualise=False):
     self.subtask_index = util.Index()
     self.task_index = util.Index()
     self._max_steps = max_steps
-
+    self._visualise = visualise
     # create World
     self.world = craft.CraftWorld(recipes_path, seed)
 
@@ -66,6 +66,7 @@ class EnvironmentFactory(object):
     scenario = self.world.sample_scenario_with_goal(goal_arg)
 
     # Wrap it into an environment
-    environment = env.CraftLab(scenario, task_name, task, max_steps=self._max_steps)
+
+    environment = env.CraftLab(scenario, task_name, task, max_steps=self._max_steps, visualise = self._visualise)
 
     return environment
