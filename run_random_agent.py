@@ -1,6 +1,5 @@
 """Try Craft environment with random agent."""
 
-from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
@@ -32,8 +31,8 @@ def run_loop(env, n_steps, render=False):
 
 
 def main():
-  recipes_path = "craft_env/resources/recipes.yaml"
-  hints_path = "craft_env/resources/hints.yaml"
+  recipes_path = "resources/recipes.yaml"
+  hints_path = "resources/hints.yaml"
   envSampler = env_factory.EnvironmentFactory(
     recipes_path, hints_path, seed=1)
 
