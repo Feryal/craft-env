@@ -5,6 +5,7 @@ from __future__ import print_function
 
 import collections
 import curses
+import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 from PIL import ImageDraw
@@ -40,9 +41,15 @@ class CraftLab(object):
     self.steps = 0
     self._current_state = self.scenario.init()
 
+    # Rendering options
+    self._render_state = {}
     self._width, self._height, _ = self._current_state.grid.shape
-    self._render_width = self._width * render_scale
-    self._render_height = self._height * render_scale
+    self._render_scale = render_scale
+    self._inventory_bar_height = 10
+    self._goal_bar_height = 30
+    self._render_width = self._width * self._render_scale
+    self._render_height = (self._height * self._render_scale +
+                           self._goal_bar_height + self._inventory_bar_height)
     # Colors of entities for rendering
     self._colors = {
         'player': sns.xkcd_palette(('red', ))[0],
@@ -70,9 +77,18 @@ class CraftLab(object):
     }
 
   def obs_specs(self):
-    obs_specs = {'features': (self.world.n_features, ), 'task_name': tuple()}
+    obs_specs = collections.OrderedDict()
+    obs_specs['features'] = {
+        'dtype': 'float32',
+        'shape': (self.world.n_features, )
+    }
+    obs_specs['task_name'] = {'dtype': 'string', 'shape': tuple()}
+
     if self._visualise:
-      obs_specs['render'] = (self._render_width, self._render_height, 3)
+      obs_specs['image'] = {
+          'dtype': 'float32',
+          'shape': (self._render_height, self._render_width, 3)
+      }
     return obs_specs
 
   def action_specs(self):
@@ -103,8 +119,7 @@ class CraftLab(object):
         'task_name': self.task_name
     }
     if self._visualise:
-      # import ipdb; ipdb.set_trace()
-      obs['render'] = self.render()
+      obs['image'] = self.render_frame().astype(np.float32)
     return obs
 
   def step(self, action, num_steps=1):
@@ -139,7 +154,30 @@ class CraftLab(object):
     """Not used."""
     pass
 
-  def render(self):
+  def render_matplotlib(self, frame=None, delta_time=0.1):
+    """Render the environment with matplotlib, updating itself."""
+
+    # Get current frame of environment or draw whatever we're given.
+    if frame is None:
+      frame = self.render_frame()
+
+    # Setup if needed
+    if not self._render_state:
+      plt.ion()
+      f, ax = plt.subplots()
+      im = ax.imshow(frame)
+      self._render_state['fig'] = f
+      self._render_state['im'] = im
+
+    # Update current frame
+    self._render_state['im'].set_data(frame)
+    self._render_state['fig'].canvas.draw()
+    self._render_state['fig'].canvas.flush_events()
+    time.sleep(delta_time)
+
+    return frame
+
+  def render_frame(self):
     """Render the current state as a 2D observation."""
     state = self._current_state
 
@@ -160,7 +198,8 @@ class CraftLab(object):
         (env_canvas.transpose(1, 0, 2) * 255).astype(np.uint8), mode='RGB')
     env_large = np.array(
         env_img.resize(
-            (self._render_width, self._render_height), Image.NEAREST)) / 255.
+            (self._render_width,
+             self._height * self._render_scale), Image.NEAREST)) / 255.
 
     ### Inventory
     # two rows: first shows color of component, second how many are there
@@ -169,25 +208,18 @@ class CraftLab(object):
       inventory_canvas[0, component_i] = self._colors[name]
     for c in xrange(3):
       inventory_canvas[1, :, c] = np.minimum(state.inventory, 1)
-    inventory_height = 10
     inventory_img = Image.fromarray(
         (inventory_canvas * 255).astype(np.uint8), mode='RGB')
     inventory_large = np.array(
         inventory_img.resize(
-            (self._render_width, inventory_height), Image.NEAREST)) / 255.
+            (self._render_width,
+             self._inventory_bar_height), Image.NEAREST)) / 255.
 
     # Show goal text
-    goal_bar_height = 40
-    goal_bar = Image.new("RGB", (self._render_width, goal_bar_height),
+    goal_bar = Image.new("RGB", (self._render_width, self._goal_bar_height),
                          (255, 255, 255))
-    font = ImageFont.load_default()
     goal_canvas = ImageDraw.Draw(goal_bar)
-    txt_w, txt_h = goal_canvas.textsize(self.task_name, font=font)
-    goal_canvas.text(
-        ((self._render_width - txt_w) / 2, (goal_bar_height - txt_h) / 2),
-        self.task_name,
-        font=font,
-        fill=(0, 0, 0))
+    goal_canvas.text((10, 10), self.task_name, fill=(0, 0, 0))
     goal_bar = np.array(goal_bar)
     goal_bar = goal_bar.astype(np.float64)
     goal_bar /= 255.0
