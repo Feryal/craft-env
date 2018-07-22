@@ -6,6 +6,10 @@ from __future__ import print_function
 import collections
 import curses
 import numpy as np
+from PIL import Image
+from PIL import ImageDraw
+from PIL import ImageFont
+import seaborn as sns
 import time
 
 Task = collections.namedtuple("Task", ["goal", "steps"])
@@ -14,7 +18,13 @@ Task = collections.namedtuple("Task", ["goal", "steps"])
 class CraftLab(object):
   """DMLab-like wrapper for a Craft state."""
 
-  def __init__(self, scenario, task_name, task, max_steps=100, visualise=False):
+  def __init__(self,
+               scenario,
+               task_name,
+               task,
+               max_steps=100,
+               visualise=False,
+               render_scale=10):
     """DMLab-like interface for a Craft environment.
 
     Given a `scenario` (basically holding an initial world state), will provide
@@ -30,6 +40,52 @@ class CraftLab(object):
     self.steps = 0
     self._current_state = self.scenario.init()
 
+    self._width, self._height, _ = self._current_state.grid.shape
+    self._render_width = self._width * render_scale
+    self._render_height = self._height * render_scale
+    # Colors of entities for rendering
+    self._colors = {
+        'player': sns.xkcd_palette(('red', ))[0],
+        'background': sns.xkcd_palette(('white', ))[0],
+        'boundary': sns.xkcd_palette(('black', ))[0],
+        'workshop0': sns.xkcd_palette(('blue', ))[0],
+        'workshop1': sns.xkcd_palette(('pink', ))[0],
+        'workshop2': sns.xkcd_palette(('violet', ))[0],
+        'water': sns.xkcd_palette(('water blue', ))[0],
+        'wood': sns.xkcd_palette(('sienna', ))[0],
+        'cloth': sns.xkcd_palette(('off white', ))[0],
+        'grass': sns.xkcd_palette(('grass', ))[0],
+        'iron': sns.xkcd_palette(('gunmetal', ))[0],
+        'stone': sns.xkcd_palette(('stone', ))[0],
+        'gold': sns.xkcd_palette(('gold', ))[0],
+        'gem': sns.xkcd_palette(('bright purple', ))[0],
+        'bridge': sns.xkcd_palette(('grey', ))[0],
+        'stick': sns.xkcd_palette(('sandy brown', ))[0],
+        'shears': sns.xkcd_palette(('cherry', ))[0],
+        'plank': sns.xkcd_palette(('brown', ))[0],
+        'ladder': sns.xkcd_palette(('metallic blue', ))[0],
+        'bed': sns.xkcd_palette(('fawn', ))[0],
+        'rope': sns.xkcd_palette(('beige', ))[0],
+        'axe': sns.xkcd_palette(('charcoal', ))[0]
+    }
+
+  def obs_specs(self):
+    obs_specs = {'features': (self.world.n_features, ), 'task_name': tuple()}
+    if self._visualise:
+      obs_specs['render'] = (self._render_width, self._render_height, 3)
+    return obs_specs
+
+  def action_specs(self):
+    # last action is termination of current option, we don't use it.
+    return {
+        'DOWN': 0,
+        'UP': 1,
+        'LEFT': 2,
+        'RIGHT': 3,
+        'USE': 4,
+        # 'TERMINATE': 5
+    }
+
   def reset(self, seed=0):
     """Reset the environment.
 
@@ -42,10 +98,14 @@ class CraftLab(object):
 
   def observations(self):
     """Return observation dict."""
-    return {
+    obs = {
         'features': self._current_state.features().astype(np.float32),
         'task_name': self.task_name
     }
+    if self._visualise:
+      # import ipdb; ipdb.set_trace()
+      obs['render'] = self.render()
+    return obs
 
   def step(self, action, num_steps=1):
     """Step the environment, getting reward, done and observation."""
@@ -58,9 +118,6 @@ class CraftLab(object):
 
     done = self._is_done()
     reward = np.float32(self._get_reward() + state_reward)
-
-    if self._visualise:
-      curses.wrapper(self.render(fps=15))
 
     if done:
       self.reset()
@@ -78,25 +135,69 @@ class CraftLab(object):
     reward = self._current_state.satisfies(goal_name, goal_arg)
     return reward
 
-  def obs_specs(self):
-    return {'features': (self.world.n_features, ), 'task_name': tuple()}
-
-  def action_specs(self):
-    # last action is termination of current option, we don't use it.
-    return {
-        'DOWN': 0,
-        'UP': 1,
-        'LEFT': 2,
-        'RIGHT': 3,
-        'USE': 4,
-        # 'TERMINATE': 5
-    }
-
   def close(self):
     """Not used."""
     pass
 
-  def render(self, fps=60):
+  def render(self):
+    """Render the current state as a 2D observation."""
+    state = self._current_state
+
+    ### Environment canvas
+    env_canvas = np.zeros((self._width, self._height, 3))
+    env_canvas[..., :] = self._colors['background']
+
+    # Place all components
+    for name, component_i in state.world.cookbook.index.contents.iteritems():
+      # Check if the component is there, if so, color env_canvas accordingly.
+      x_i, y_i = np.nonzero(state.grid[..., component_i])
+      env_canvas[x_i, y_i] = self._colors[name]
+
+    # Place self
+    env_canvas[state.pos] = self._colors['player']
+    # Upscale to render at higher resolution
+    env_img = Image.fromarray(
+        (env_canvas.transpose(1, 0, 2) * 255).astype(np.uint8), mode='RGB')
+    env_large = np.array(
+        env_img.resize(
+            (self._render_width, self._render_height), Image.NEAREST)) / 255.
+
+    ### Inventory
+    # two rows: first shows color of component, second how many are there
+    inventory_canvas = np.zeros((2, state.inventory.shape[0], 3))
+    for name, component_i in state.world.cookbook.index.contents.iteritems():
+      inventory_canvas[0, component_i] = self._colors[name]
+    for c in xrange(3):
+      inventory_canvas[1, :, c] = np.minimum(state.inventory, 1)
+    inventory_height = 10
+    inventory_img = Image.fromarray(
+        (inventory_canvas * 255).astype(np.uint8), mode='RGB')
+    inventory_large = np.array(
+        inventory_img.resize(
+            (self._render_width, inventory_height), Image.NEAREST)) / 255.
+
+    # Show goal text
+    goal_bar_height = 40
+    goal_bar = Image.new("RGB", (self._render_width, goal_bar_height),
+                         (255, 255, 255))
+    font = ImageFont.load_default()
+    goal_canvas = ImageDraw.Draw(goal_bar)
+    txt_w, txt_h = goal_canvas.textsize(self.task_name, font=font)
+    goal_canvas.text(
+        ((self._render_width - txt_w) / 2, (goal_bar_height - txt_h) / 2),
+        self.task_name,
+        font=font,
+        fill=(0, 0, 0))
+    goal_bar = np.array(goal_bar)
+    goal_bar = goal_bar.astype(np.float64)
+    goal_bar /= 255.0
+
+    # Combine into single window
+    canvas_full = np.concatenate([goal_bar, env_large, inventory_large])
+
+    return canvas_full
+
+  def render_curses(self, fps=60):
     """Render the current state in curses."""
     width, height, _ = self._current_state.grid.shape
     action_spec = self.action_specs()
