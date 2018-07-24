@@ -25,7 +25,8 @@ class CraftLab(object):
                task,
                max_steps=100,
                visualise=False,
-               render_scale=10):
+               render_scale=10,
+               extra_pickup_penalty=0.3):
     """DMLab-like interface for a Craft environment.
 
     Given a `scenario` (basically holding an initial world state), will provide
@@ -39,6 +40,7 @@ class CraftLab(object):
     self.max_steps = max_steps
     self._visualise = visualise
     self.steps = 0
+    self._extra_pickup_penalty = extra_pickup_penalty
     self._current_state = self.scenario.init()
 
     # Rendering options
@@ -147,7 +149,14 @@ class CraftLab(object):
 
   def _get_reward(self):
     goal_name, goal_arg = self.task.goal
-    reward = self._current_state.satisfies(goal_name, goal_arg)
+
+    # We want the correct pickup to be in inventory.
+    # But we will penalise the agent for picking up extra stuff.
+    items_index = np.arange(self._current_state.inventory.size)
+    reward = float(self._current_state.inventory[goal_arg] > 0)
+    reward -= self._extra_pickup_penalty * np.sum(
+        self._current_state.inventory[items_index != goal_arg])
+    reward = np.maximum(reward, 0)
     return reward
 
   def close(self):
