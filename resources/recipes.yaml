@@ -31,6 +31,10 @@ recipes:
     wood: 1
     _at: workshop1
 
+  bundle:
+    wood: 2
+    _at: workshop1
+
   bed:
     plank: 1
     grass: 1
@@ -50,7 +54,17 @@ recipes:
     iron: 1
     _at: workshop2
 
+  flag:
+    stick: 1
+    cloth: 1
+    _at: workshop2
+
   ladder:
     plank: 1
     stick: 1
     _at: workshop2
+
+  goldarrow:
+    gold: 1
+    plank: 1
+    _at: workshop0
