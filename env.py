@@ -168,7 +168,8 @@ class CraftLab(object):
       im = ax.imshow(frame)
       self._render_state['fig'] = f
       self._render_state['im'] = im
-
+      ax.set_yticklabels([])
+      ax.set_xticklabels([])
     # Update current frame
     self._render_state['im'].set_data(frame)
     self._render_state['fig'].canvas.draw()

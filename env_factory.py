@@ -56,7 +56,7 @@ class EnvironmentFactory(object):
       self.tasks[hint_key] = task
       self.task_index.index(task)
 
-    self.task_names = self.tasks.keys()
+    self.task_names = sorted(self.tasks.keys())
 
   def sample_environment(self, task_name=None):
     if task_name is None:
