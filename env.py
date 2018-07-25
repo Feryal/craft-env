@@ -42,7 +42,7 @@ class CraftLab(object):
     self.steps = 0
     self._extra_pickup_penalty = extra_pickup_penalty
     self._current_state = self.scenario.init()
-
+    self._all_obs = self._current_state.all_obs()
     # Rendering options
     self._render_state = {}
     self._width, self._height, _ = self._current_state.grid.shape
@@ -87,6 +87,26 @@ class CraftLab(object):
         'dtype': 'float32',
         'shape': (self.world.n_features, )
     }
+    obs_specs['grid_big'] = {
+        'dtype': 'float32',
+        'shape': (25, 25, 24)
+    }
+    obs_specs['inventory'] = {
+        'dtype': 'float32',
+        'shape': (24,)
+    }
+    obs_specs['pos'] = {
+        'dtype': 'float32',
+        'shape': (2,)
+    }
+    obs_specs['dir'] = {
+        'dtype': 'float32',
+        'shape': (4,)
+    }
+    obs_specs['pixels'] = {
+        'dtype': 'float32',
+        'shape': (50, 50, 3)
+    }
     obs_specs['task_name'] = {'dtype': 'string', 'shape': tuple()}
 
     if self._visualise:
@@ -117,11 +137,41 @@ class CraftLab(object):
     self.steps = 0
     return self.observations()
 
+  def _env_grid(self):
+    """Get the current state as a 2D RGB pixel observation."""
+    state = self._current_state
+
+    ### Environment canvas
+    env_canvas = np.zeros((self._width, self._height, 3))
+    env_canvas[..., :] = self._colors['background']
+
+    # Place all components
+    for name, component_i in state.world.cookbook.index.contents.iteritems():
+      # Check if the component is there, if so, color env_canvas accordingly.
+      x_i, y_i = np.nonzero(state.grid[..., component_i])
+      env_canvas[x_i, y_i] = self._colors[name]
+
+    # Place self
+    env_canvas[state.pos] = self._colors['player']
+    # Upscale to render at higher resolution
+    env_img = Image.fromarray(
+        (env_canvas.transpose(1, 0, 2) * 255).astype(np.uint8), mode='RGB')
+    env_large = np.array(
+        env_img.resize(
+            (self._width * 5,
+             self._height * 5), Image.NEAREST), dtype=np.float32) / 255.
+    return env_large
+
   def observations(self):
     """Return observation dict."""
     obs = {
         'features': self._current_state.features().astype(np.float32),
-        'task_name': self.task_name
+        'grid_big': self._all_obs['grid_big'],
+        'pos': self._all_obs['pos'],
+        'inventory': self._all_obs['inventory'],
+        'dir': self._all_obs['dir'],
+        'task_name': self.task_name,
+        'pixels': self._env_grid().astype(np.float32)
     }
     if self._visualise:
       obs['image'] = self.render_frame().astype(np.float32)

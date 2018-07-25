@@ -9,6 +9,8 @@ import numpy as np
 from skimage.measure import block_reduce
 import time
 
+import collections
+
 WIDTH = 10
 HEIGHT = 10
 
@@ -198,6 +200,7 @@ class CraftState(object):
     self.pos = pos
     self.dir = dir
     self._cached_features = None
+    self._all_obs = collections.defaultdict(list)
 
   def satisfies(self, goal_name, goal_arg):
     return self.inventory[goal_arg] > 0
@@ -231,10 +234,48 @@ class CraftState(object):
       features = np.concatenate((grid_feats.ravel(),
                                  grid_feats_big_red.ravel(),
                                  self.inventory, dir_features, [0]))
+      # import ipdb; ipdb.set_trace()
       assert len(features) == self.world.n_features
       self._cached_features = features
 
     return self._cached_features.astype(np.float32)
+
+  def all_obs(self):
+    x, y = self.pos
+    hw = int(WINDOW_WIDTH / 2)
+    hh = int(WINDOW_HEIGHT / 2)
+    bhw = int((WINDOW_WIDTH * WINDOW_WIDTH) / 2)
+    bhh = int((WINDOW_HEIGHT * WINDOW_HEIGHT) / 2)
+
+    grid_feats = array.pad_slice(self.grid, (x - hw, x + hw + 1),
+                                  (y - hh, y + hh + 1))
+    grid_feats_big = array.pad_slice(self.grid, (x - bhw, x + bhw + 1),
+                                      (y - bhh, y + bhh + 1))
+    grid_feats_big_red = block_reduce(
+        grid_feats_big, (WINDOW_WIDTH, WINDOW_HEIGHT, 1), func=np.max)
+    #grid_feats_big_red = np.zeros((WINDOW_WIDTH, WINDOW_HEIGHT, self.world.cookbook.n_kinds))
+
+    self.gf = grid_feats.transpose((2, 0, 1))
+    self.gfb = grid_feats_big_red.transpose((2, 0, 1))
+
+    pos_feats = np.asarray(self.pos, dtype=np.float32)
+    pos_feats[0] /= WIDTH
+    pos_feats[1] /= HEIGHT
+
+    dir_features = np.zeros(4)
+    dir_features[self.dir] = 1
+
+    features = np.concatenate((grid_feats.ravel(),
+                                grid_feats_big_red.ravel(),
+                                self.inventory, dir_features, [0]))
+    self._all_obs = {
+                     'grid_big': grid_feats_big.astype(np.float32),
+                     'grid_small': grid_feats.astype(np.float32),
+                     'inventory': self.inventory.astype(np.float32),
+                     'dir': dir_features.astype(np.float32),
+                     'pos': pos_feats.astype(np.float32),
+                     'features': features.astype(np.float32)}
+    return self._all_obs
 
   def step(self, action):
     x, y = self.pos
