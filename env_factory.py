@@ -22,11 +22,19 @@ class EnvironmentFactory(object):
                hints_path,
                max_steps=100,
                seed=0,
-               visualise=False):
+               visualise=False,
+               reuse_environments=False):
     self.subtask_index = util.Index()
     self.task_index = util.Index()
     self._max_steps = max_steps
     self._visualise = visualise
+    self._reuse_environments = reuse_environments
+
+    # Per task, we reuse the same environment, with same layouts.
+    # Should generates much easier tasks where agents can overfit.
+    if self._reuse_environments:
+      self._env_cache = {}
+
     # create World
     self.world = craft.CraftWorld(recipes_path, seed)
 
@@ -58,10 +66,7 @@ class EnvironmentFactory(object):
 
     self.task_names = sorted(self.tasks.keys())
 
-  def sample_environment(self, task_name=None):
-    if task_name is None:
-      task_name = np.random.choice(self.task_names)
-
+  def _create_environment(self, task_name):
     # Get the task
     task = self.tasks[task_name]
     goal_arg = task.goal[1]
@@ -69,13 +74,20 @@ class EnvironmentFactory(object):
     # Sample a world (== scenario for them...)
     scenario = self.world.sample_scenario_with_goal(goal_arg)
 
-    # Wrap it into an environment
-
-    environment = env.CraftLab(
+    # Wrap it into an environment and return
+    return env.CraftLab(
         scenario,
         task_name,
         task,
         max_steps=self._max_steps,
         visualise=self._visualise)
 
-    return environment
+  def sample_environment(self, task_name=None):
+    if task_name is None:
+      task_name = np.random.choice(self.task_names)
+
+    if self._reuse_environments:
+      return self._env_cache.setdefault(task_name,
+                                        self._create_environment(task_name))
+    else:
+      return self._create_environment(task_name)
