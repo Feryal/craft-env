@@ -98,7 +98,7 @@ class CraftWorld(object):
 
     # treasure
     if make_island or make_cave:
-      (gx, gy) = (1 + np.random.randint(WIDTH - 2), 1)
+      (gx, gy) = (1 + self.random.randint(WIDTH - 2), 1)
       treasure_index = \
           self.cookbook.index["gold"] if make_island else self.cookbook.index["gem"]
       wall_index = \

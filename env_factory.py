@@ -66,6 +66,11 @@ class EnvironmentFactory(object):
 
     self.task_names = sorted(self.tasks.keys())
 
+    if self._reuse_environments:
+      # Trying to handle random seed weirdness by preallocating everything.
+      for task_name in self.task_names:
+        self.sample_environment(task_name)
+
   def _create_environment(self, task_name):
     # Get the task
     task = self.tasks[task_name]

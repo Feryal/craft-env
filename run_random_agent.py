@@ -41,7 +41,8 @@ def main():
   recipes_path = "resources/recipes.yaml"
   hints_path = "resources/hints.yaml"
   env_sampler = env_factory.EnvironmentFactory(
-      recipes_path, hints_path, max_steps=100, seed=2, visualise=visualise)
+      recipes_path, hints_path, max_steps=100, seed=1, reuse_environments=True,
+      visualise=visualise)
 
   # env = env_sampler.sample_environment()
   # print("Environment: task {}: {}".format(env.task_name, env.task))
