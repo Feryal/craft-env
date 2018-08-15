@@ -26,9 +26,9 @@ def run_loop(env, n_steps, visualise=False):
           t, reward, done, observations))
 
     if reward:
-      rewarding_frame = np.ones_like(observations['image']) * np.array(
-          [0, 1, 0])
-      env.render_matplotlib(frame=rewarding_frame, delta_time=0.3)
+      rewarding_frame = observations['image'].copy()
+      rewarding_frame[:40] *= np.array([0, 1, 0])
+      env.render_matplotlib(frame=rewarding_frame, delta_time=0.7)
       print("[{}] Got a rewaaaard! {:.1f}".format(t, reward))
     elif done:
       env.render_matplotlib(
