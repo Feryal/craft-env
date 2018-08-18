@@ -67,6 +67,13 @@ class CraftLab(object):
         'grass': sns.xkcd_palette(('grass', ))[0],
         'iron': sns.xkcd_palette(('gunmetal', ))[0],
         'stone': sns.xkcd_palette(('stone', ))[0],
+        'rock': sns.xkcd_palette(('light peach', ))[0],
+        'hammer': sns.xkcd_palette(('chestnut', ))[0],
+        'knife': sns.xkcd_palette(('greyblue', ))[0],
+        'slingshot': sns.xkcd_palette(('dusty orange', ))[0],
+        'bench': sns.xkcd_palette(('umber', ))[0],
+        'arrow': sns.xkcd_palette(('cadet blue', ))[0],
+        'bow': sns.xkcd_palette(('dark khaki', ))[0],
         'gold': sns.xkcd_palette(('gold', ))[0],
         'gem': sns.xkcd_palette(('bright purple', ))[0],
         'bridge': sns.xkcd_palette(('grey', ))[0],
@@ -216,11 +223,11 @@ class CraftLab(object):
 
     ### Inventory
     # two rows: first shows color of component, second how many are there
-    inventory_canvas = np.zeros((2, state.inventory.shape[0], 3))
-    for name, component_i in state.world.cookbook.index.contents.iteritems():
-      inventory_canvas[0, component_i] = self._colors[name]
+    inventory_canvas = np.zeros((2, len(state.world.grabbable_indices) + 1, 3))
+    for i, obj_id in enumerate(state.world.grabbable_indices[1:]):
+      inventory_canvas[0, i + 1] = self._colors[state.world.cookbook.index.get(obj_id)]
     for c in xrange(3):
-      inventory_canvas[1, :, c] = np.minimum(state.inventory, 1)
+      inventory_canvas[1, 1:-1, c] = np.minimum(state.inventory[state.world.grabbable_indices[1:]], 1)
     inventory_img = Image.fromarray(
         (inventory_canvas * 255).astype(np.uint8), mode='RGB')
     inventory_large = np.array(

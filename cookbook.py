@@ -29,6 +29,9 @@ class Cookbook(object):
   def primitives_for(self, goal):
     out = {}
 
+    if goal not in self.recipes:
+      return out
+
     def insert(kind, count):
       assert kind in self.primitives
       if kind not in out:

@@ -10,6 +10,7 @@ primitives:
   - iron
   - grass
   - wood
+  - rock
   - gold
   - gem
 
@@ -18,38 +19,76 @@ recipes:
     wood: 1
     _at: workshop0
 
-  axe:
-    stick: 1
-    iron: 1
-    _at: workshop0
-
-  rope:
-    grass: 1
-    _at: workshop0
-
   stick:
     wood: 1
-    _at: workshop1
-
-  bundle:
-    wood: 2
-    _at: workshop1
-
-  bed:
-    plank: 1
-    grass: 1
-    _at: workshop1
-
-  shears:
-    stick: 1
-    iron: 1
     _at: workshop1
 
   cloth:
     grass: 1
     _at: workshop2
 
+  rope:
+    grass: 1
+    _at: workshop0
+
   bridge:
+    wood: 1
+    iron: 1
+    _at: workshop2
+
+  bundle:
+    wood: 1
+    grass: 1
+    _at: workshop1
+
+  hammer:
+    wood: 1
+    rock: 1
+    _at: workshop0
+
+  knife:
+    iron: 1
+    rock: 1
+    _at: workshop2
+
+  bed:
+    plank: 1
+    grass: 1
+    _at: workshop1
+
+  axe:
+    stick: 1
+    iron: 1
+    _at: workshop0
+
+  shears:
+    stick: 1
+    iron: 1
+    _at: workshop1
+
+  ladder:
+    plank: 1
+    stick: 1
+    _at: workshop2
+
+  slingshot:
+    rope: 1
+    wood: 1
+    rock: 1
+    _at: workshop1
+
+  arrow:
+    knife: 1
+    wood: 1
+    _at: workshop0
+
+  bow:
+    rope: 1
+    bundle: 1
+    _at: workshop2
+
+  bench:
+    hammer: 1
     wood: 1
     iron: 1
     _at: workshop2
@@ -57,14 +96,10 @@ recipes:
   flag:
     stick: 1
     cloth: 1
-    _at: workshop2
-
-  ladder:
-    plank: 1
-    stick: 1
-    _at: workshop2
+    iron: 1
+    _at: workshop0
 
   goldarrow:
     gold: 1
-    plank: 1
+    wood: 1
     _at: workshop0

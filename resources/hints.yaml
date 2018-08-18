@@ -1,23 +1,38 @@
+"get[wood]":
+  ["get_wood"]
+
+"get[grass]":
+  ["get_grass"]
+
+"get[iron]":
+  ["get_iron"]
+
+"get[rock]":
+  ["get_rock"]
+
 "make[plank]":
   ["get_wood", "make0"]
 
 "make[stick]":
   ["get_wood", "make1"]
 
-"make[bundle]":
-  ["get_wood", "get_wood", "make1"]
-
 "make[cloth]":
   ["get_grass", "make2"]
-
-"make[flag]":
-  ["get_wood", "make1", "get_grass", "make2"]
 
 "make[rope]":
   ["get_grass", "make0"]
 
 "make[bridge]":
   ["get_iron", "get_wood", "make2"]
+
+"make[bundle]":
+  ["get_wood", "get_grass", "make1"]
+
+"make[hammer]":
+  ["get_wood", "get_rock", "make0"]
+
+"make[knife]":
+  ["get_iron", "get_rock", "make2"]
 
 "make[bed]":
   ["get_wood", "make0", "get_grass", "make1"]
@@ -37,14 +52,20 @@
 "make[ladder]":
   ["get_wood", "make0", "get_wood", "make1", "make2"]
 
+"make[slingshot]":
+  ["get_grass", "make0", "get_wood", "get_rock", "make1"]
+
+"make[arrow]":
+  ["get_iron", "get_rock", "make2", "get_wood", "make0"]
+
+"make[bow]":
+  ["get_grass", "make0", "get_wood", "get_grass", "make1", "make2"]
+
+"make[bench]":
+  ["get_wood", "get_rock", "make0", "get_wood", "get_iron", "make2"]
+
+"make[flag]":
+  ["get_wood", "make1", "get_grass", "make2", "get_iron", "make0"]
+
 "make[goldarrow]":
   ["get_iron", "get_wood", "make2", "get_gold", "get_wood", "make0"]
-
-"get[wood]":
-  ["get_wood"]
-
-"get[grass]":
-  ["get_grass"]
-
-"get[iron]":
-  ["get_iron"]

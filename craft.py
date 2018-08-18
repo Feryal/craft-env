@@ -9,8 +9,8 @@ import numpy as np
 from skimage.measure import block_reduce
 import time
 
-WIDTH = 10
-HEIGHT = 10
+WIDTH = 12
+HEIGHT = 12
 
 WINDOW_WIDTH = 5
 WINDOW_HEIGHT = 5
@@ -74,20 +74,19 @@ class CraftWorld(object):
 
   def sample_scenario_with_goal(self, goal):
     assert goal not in self.cookbook.environment
-    if goal in self.cookbook.primitives:
-      make_island = goal == self.cookbook.index["gold"]
-      make_cave = goal == self.cookbook.index["gem"]
-      return self.sample_scenario(
-          {
-              goal: 1
-          }, make_island=make_island, make_cave=make_cave)
-    elif goal in self.cookbook.recipes:
-      ingredients = self.cookbook.primitives_for(goal)
-      return self.sample_scenario(ingredients)
-    else:
-      assert False, "don't know how to build a scenario for %s" % goal
 
-  def sample_scenario(self, ingredients, make_island=False, make_cave=False):
+    ingredients = self.cookbook.primitives_for(goal)
+    make_island = (goal == self.cookbook.index["gold"] or
+                   self.cookbook.index["gold"] in ingredients)
+    make_cave = (goal == self.cookbook.index["gem"] or
+                 self.cookbook.index["gem"] in ingredients)
+
+    if (goal not in self.cookbook.primitives and goal not in self.cookbook.recipes):
+      raise ValueError("Don't know how to build a scenario for %s" % goal)
+
+    return self.sample_scenario(make_island=make_island, make_cave=make_cave)
+
+  def sample_scenario(self, make_island=False, make_cave=False):
     # generate grid
     grid = np.zeros((WIDTH, HEIGHT, self.cookbook.n_kinds))
     i_bd = self.cookbook.index["boundary"]
@@ -111,8 +110,8 @@ class CraftWorld(object):
 
     # ingredients
     for primitive in self.cookbook.primitives:
-      if primitive == self.cookbook.index["gold"] or \
-              primitive == self.cookbook.index["gem"]:
+      if (primitive == self.cookbook.index["gold"] or
+          primitive == self.cookbook.index["gem"]):
         continue
       for i in range(4):
         (x, y) = random_free(grid, self.random)
