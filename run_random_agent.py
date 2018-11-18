@@ -44,10 +44,6 @@ def main():
       recipes_path, hints_path, max_steps=100, reuse_environments=False,
       visualise=visualise)
 
-  # env = env_sampler.sample_environment()
-  # print("Environment: task {}: {}".format(env.task_name, env.task))
-  # run_loop(env, 100 * 3, visualise=visualise)
-
   env = env_sampler.sample_environment(task_name='get[rock]')
   print("Environment: task {}: {}".format(env.task_name, env.task))
   run_loop(env, 100 * 3, visualise=visualise)
