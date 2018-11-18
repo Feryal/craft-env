@@ -69,7 +69,7 @@ This code should also be able to integrate with Gym environments with minor chan
 
 ## Acknowledgements
 
-- [@jacobandreas](https://github.com/jacobandreas) for open-sourcing the mine-craft inspired Craft Environment used in Policy Sketches paper [[1]](##References) [Craft Environment](https://github.com/jacobandreas/psketch)
+- [@jacobandreas](https://github.com/jacobandreas) for open-sourcing the mine-craft inspired Craft Environment used in Policy Sketches paper [[1]](##References) [Craft Environment](https://github.com/jacobandreas/psketch) which this codebase is heavily based on
 
 ## References
 
