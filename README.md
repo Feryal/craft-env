@@ -35,8 +35,7 @@ Tasks range from simple collection "Get X" tasks, slightly more difficult crafti
 </p>
 
 I wrote a visualisation tool to see how these environments look like and how agents interact with it.
-This is currently only used for post-hoc analysis or debugging, as the agent instead receives a set of features as observation.
-But in future work, one could instead use this 2D view as observation for agents.
+This is currently only used for post-hoc analysis or debugging, as the agent instead receives a flattened vector of features (1-hot indicators of the type of element in a given cell), a 5x5 egocentric view around the agent and its inventory as observation. But in future work, one could instead use this 2D view as observation for agents.
 
 <p>
 <img src="assets/random_agent.gif"/> <br />
