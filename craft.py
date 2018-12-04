@@ -111,7 +111,7 @@ class CraftWorld(object):
     # ingredients
     for primitive in self.cookbook.primitives:
       if (primitive == self.cookbook.index["gold"] or
-          primitive == self.cookbook.index["gem"]):
+              primitive == self.cookbook.index["gem"]):
         continue
       for i in range(4):
         (x, y) = random_free(grid, self.random)
@@ -196,6 +196,7 @@ class CraftState(object):
     self.inventory = inventory
     self.pos = pos
     self.dir = dir
+    self._cached_features_dict = None
     self._cached_features = None
 
   def satisfies(self, goal_name, goal_arg):
@@ -203,37 +204,54 @@ class CraftState(object):
 
   def features(self):
     if self._cached_features is None:
+      features_dict = self.features_dict()
+      features = np.concatenate((features_dict['features_ego'].ravel(),
+                                 features_dict['features_ego_large'].ravel(),
+                                 features_dict['inventory'],
+                                 features_dict['direction'],
+                                 [0]))
+      assert len(features) == self.world.n_features
+      self._cached_features = features.astype(np.float32)
+    return self._cached_features
+
+  def features_dict(self):
+    if self._cached_features_dict is None:
       x, y = self.pos
+
+      # Egocentric view, one-hot of features
       hw = int(WINDOW_WIDTH / 2)
       hh = int(WINDOW_HEIGHT / 2)
-      bhw = int((WINDOW_WIDTH * WINDOW_WIDTH) / 2)
-      bhh = int((WINDOW_HEIGHT * WINDOW_HEIGHT) / 2)
-
       grid_feats = array.pad_slice(self.grid, (x - hw, x + hw + 1),
                                    (y - hh, y + hh + 1))
+
+      # Larger egocentric view, downsampled
+      bhw = int((WINDOW_WIDTH * WINDOW_WIDTH) / 2)
+      bhh = int((WINDOW_HEIGHT * WINDOW_HEIGHT) / 2)
       grid_feats_big = array.pad_slice(self.grid, (x - bhw, x + bhw + 1),
                                        (y - bhh, y + bhh + 1))
-      grid_feats_big_red = block_reduce(
+      grid_feats_big_downsampled = block_reduce(
           grid_feats_big, (WINDOW_WIDTH, WINDOW_HEIGHT, 1), func=np.max)
-      #grid_feats_big_red = np.zeros((WINDOW_WIDTH, WINDOW_HEIGHT, self.world.cookbook.n_kinds))
 
-      self.gf = grid_feats.transpose((2, 0, 1))
-      self.gfb = grid_feats_big_red.transpose((2, 0, 1))
-
+      # Position
       pos_feats = np.asarray(self.pos)
       pos_feats[0] /= WIDTH
       pos_feats[1] /= HEIGHT
 
+      # Direction
       dir_features = np.zeros(4)
       dir_features[self.dir] = 1
 
-      features = np.concatenate((grid_feats.ravel(),
-                                 grid_feats_big_red.ravel(),
-                                 self.inventory, dir_features, [0]))
-      assert len(features) == self.world.n_features
-      self._cached_features = features
+      features_dict = {
+          'features_ego': grid_feats,
+          'features_ego_large': grid_feats_big_downsampled,
+          'features_global': self.grid.copy(),  # Global allocentric view
+          'pos': pos_feats,
+          'direction': dir_features,
+          'inventory': self.inventory.copy()
+      }
+      self._cached_features_dict = features_dict
 
-    return self._cached_features.astype(np.float32)
+    return self._cached_features_dict
 
   def step(self, action):
     x, y = self.pos

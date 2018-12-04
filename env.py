@@ -128,6 +128,7 @@ class CraftLab(object):
     """Return observation dict."""
     obs = {
         'features': self._current_state.features().astype(np.float32),
+        'features_dict': self._current_state.features_dict(),
         'task_name': self.task_name
     }
     if self._visualise:
